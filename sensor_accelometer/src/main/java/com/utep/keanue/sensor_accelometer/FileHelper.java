@@ -113,27 +113,6 @@ public class FileHelper {
         } else {
             return false;
         }
-    }
-
-
-
-//    /** DeleteFile
-//     * This will be used to start a new log file */
-//    public static boolean deleteFile(Context context){
-//
-//        try {
-//            //Manage the file
-//            FileInputStream fileInputStream = new FileInputStream(new File(path + fileName));
-//
-//            context.deleteFile(fileName);
-//
-//            return true;
-//        } catch (FileNotFoundException ex) {
-//            Log.d(TAG, ex.getMessage());
-//        }
-//
-//
-//       return false;
-//    }//end deleteFile
+    }//end delete file
 
 }//end class
