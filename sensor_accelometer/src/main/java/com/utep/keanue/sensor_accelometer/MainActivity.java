@@ -30,8 +30,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private Button btn_save, btn_read, btn_delete;
     private Sensor mySensor;
     private SensorManager SM;
-
     private TextView txtContent;
+
+    //The following can be removed and set as return elements
+    //instead of having them as global variables
+    // ** Security and Code Design **//
+    private String current_ac_data;     //Accelerometer data
+    private String current_time;        //Time stamp
 
     /** onCreate Method.
      * First thing the application will do once started */
@@ -62,33 +67,19 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         btn_read = (Button)findViewById(R.id.btn_read);
         btn_delete = (Button)findViewById(R.id.btn_delete);
 
-        //Time Stamp
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd-MM-yyyy-hh-mm-ss");
-        String format = simpleDateFormat.format(new Date());
-
-        Log.d("MainActivity", "Current Timestamp: " + format);
-
-        //Local Concatenated Text
-        final String full_data = (format + " "+xText.getText()+" "+yText.getText()+" "+zText.getText()+".");
-
-        Log.d("MainActivity", "INFO: " + full_data);
-
         //Display Saved Data
         txtContent = (TextView) findViewById(R.id.txtContent);
-
-        //TODO ADD CODE TO INSERT FILE HELPER. JAVA
 
         // Save on File
         btn_save.setOnClickListener(new View.OnClickListener() {
             @Override
+            /** Save current data along with timestamp to file */
             public void onClick(View v) {
-                if (FileHelper.saveToFile( full_data)){
-                    Toast.makeText(MainActivity.this,"Saved to file",Toast.LENGTH_SHORT).show();
-                }else{
-                    Toast.makeText(MainActivity.this,"Error save file!!!",Toast.LENGTH_SHORT).show();
-                }
+
+                //Run updateInterval
+                updateInterval(1, 5);
             }
-        });
+        });//end onClick SaveFile
 
         // Read File
         btn_read = (Button) findViewById(R.id.btn_read);
@@ -115,7 +106,51 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         });
     }//end onCreate
 
-    /***/
+    /** Update Interval */
+    public void updateInterval(int seconds, int instances){
+        final int millis = seconds *1000;
+        final int ins = instances;
+
+        String sendLecture = "";
+        Log.d("Inside updateint", "we're good");
+
+        //Create a new thread
+        Thread t = new Thread() {
+
+            @Override
+            public void run() {
+
+                try {
+                    int i = 0;
+                    while (i < ins) {
+                        Thread.sleep(millis);
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                //Extract Global Variables
+                                //Time Stamp
+                                SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd -> hh:mm:ss.SSS");
+                                String timeStamp = simpleDateFormat.format(new Date());
+                                //Concatenated Data
+                                String full_data = (timeStamp +"["+current_ac_data+"]");
+
+                                if (FileHelper.saveToFile(full_data)){
+                                    Toast.makeText(MainActivity.this,"Saved to file",Toast.LENGTH_SHORT).show();
+                                }else{
+                                    Toast.makeText(MainActivity.this,"Error save file!!!",Toast.LENGTH_SHORT).show();
+                                }
+                            }
+                        });
+                        //Update i
+                        i++;
+                    }
+                } catch (InterruptedException e) {
+                }
+            }
+        };
+
+        t.start();
+    }//end updateInterval
 
     /** Sensor Changed
      * This will change the TextView to the values of the sensor */
@@ -124,6 +159,20 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         xText.setText("X = "+event.values[0]);
         yText.setText("Y = "+event.values[1]);
         zText.setText("Z = "+event.values[2]);
+
+        //Local Variables
+        String x = xText.getText().toString();
+        String y = yText.getText().toString();
+        String z = zText.getText().toString();
+
+        //Log (Testing Purposes)d
+        //Log.d("xString: ",x);
+        //Log.d("yString: ",y);
+        //Log.d("zString: ",z);
+
+        //Save full accelerometer data
+        current_ac_data = (x+" "+y+" "+z);
+        //Log.d("AC_DATA: ", current_ac_data);
     }
 
     /** Method from interface (NOT USED) */
